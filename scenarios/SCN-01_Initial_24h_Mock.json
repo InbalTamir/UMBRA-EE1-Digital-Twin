@@ -1,0 +1,36 @@
+{
+  "id": "SCN-01",
+  "name": "Initial_24h_Energy_Balance",
+  "version": "0.1",
+  "status": "Mock",
+  "simulation": {
+    "duration_s": 86400,
+    "dt_s": 0.1
+  },
+  "pv": {
+    "area_m2": 0.6,
+    "efficiency": 0.25,
+    "mppt_efficiency": 0.95
+  },
+  "battery": {
+    "nominal_energy_Wh": 400,
+    "initial_soc_pct": 100,
+    "reserve_soc_pct": 20
+  },
+  "environment": {
+    "sunrise_h": 6,
+    "solar_noon_h": 12,
+    "sunset_h": 18,
+    "peak_irradiance_W_m2": 950
+  },
+  "loads": {
+    "propulsion_W": 55.48,
+    "avionics_W": 35,
+    "auxiliary_W": 5
+  },
+  "provenance": {
+    "pv_area": "UMBRA-3 reference range; midpoint",
+    "battery_energy": "UMBRA-3 reference range; midpoint",
+    "other_parameters": "Synthetic / uncalibrated"
+  }
+}

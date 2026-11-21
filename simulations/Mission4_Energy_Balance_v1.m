@@ -2,31 +2,59 @@
 % Mission 4: 24-Hour Energy Balance & SOC Simulation (Baseline SRR)
 clear; clc; close all;
 
-%% 1. Baseline Parameters (Aligned with UMBRA_EE1_Baseline_Final.xlsx)
-dt = 0.1;                      % [s] Time step (10 Hz sampling rate)
-t_hours = 0:(dt/3600):24;      % [h] 24-hour simulation vector
+%% Load Scenario Configuration
+project_root = fileparts(fileparts(mfilename('fullpath')));
+
+scenario_path = fullfile(project_root, 'scenarios', ...
+    'SCN-01_Initial_24h_Mock.json');
+
+scenario = jsondecode(fileread(scenario_path));
+
+fprintf('Loaded scenario: %s (version %s)\n', ...
+    scenario.id, scenario.version);
+
+
+
+%% 1. Scenario Parameters (SCN-01 Mock)
+
+% Simulation
+dt = scenario.simulation.dt_s;
+duration_h = scenario.simulation.duration_s / 3600;
+t_hours = 0:(dt/3600):duration_h;
 N = length(t_hours);
 
-% PV & MPPT Parameters (ASM-001 to ASM-003)
-A_pv = 0.60;          % [m^2] Reference PV active area
-eta_pv = 0.25;                 % [-] Solar cell efficiency (STC)
-eta_mppt = 0.95;               % [-] MPPT + wiring efficiency
+% PV and MPPT
+A_pv = scenario.pv.area_m2;
+eta_pv = scenario.pv.efficiency;
+eta_mppt = scenario.pv.mppt_efficiency;
 
-% Battery Parameters (ASM-004, ASM-005, ASM-010)
-E_bat_nom = 400.0;    % [Wh] Reference battery capacity
-SOC_init = 100.0;              % [%] Initial State of Charge
-SOC_reserve = 20.0;            % [%] Minimum safety reserve threshold
+% Battery
+E_bat_nom = scenario.battery.nominal_energy_Wh;
+SOC_init = scenario.battery.initial_soc_pct;
+SOC_reserve = scenario.battery.reserve_soc_pct;
 
-% Power Consumption Loads (ASM-007, ASM-008)
-P_prop_cruise = 55.48;         % [W] Cruise propulsion electrical power
-P_avionics = 35.0;             % [W] Avionics & flight computer power
-P_aux = 5.0;                   % [W] Auxiliary & sensor losses
+% Electrical loads
+P_prop_cruise = scenario.loads.propulsion_W;
+P_avionics = scenario.loads.avionics_W;
+P_aux = scenario.loads.auxiliary_W;
+
 
 %% 2. Solar Irradiance Profile (24-Hour Synthetic Clear-Sky Day)
 % Sunrise at 06:00, Solar Noon at 12:00 (Peak 950 W/m^2), Sunset at 18:00
+
+% Solar irradiance parameters from scenario
+sunrise_h = scenario.environment.sunrise_h;
+sunset_h = scenario.environment.sunset_h;
+peak_G = scenario.environment.peak_irradiance_W_m2;
+
+% Synthetic clear-sky irradiance profile
 G_irradiance = zeros(1, N);
-day_idx = (t_hours >= 6) & (t_hours <= 18);
-G_irradiance(day_idx) = 950 * sin(pi * (t_hours(day_idx) - 6) / 12);
+
+day_idx = (t_hours >= sunrise_h) & (t_hours <= sunset_h);
+
+G_irradiance(day_idx) = peak_G * ...
+    sin(pi * (t_hours(day_idx) - sunrise_h) / ...
+    (sunset_h - sunrise_h));
 
 %% 3. Power Balance & State Integration
 P_PV = G_irradiance * A_pv * eta_pv * eta_mppt;   % [W] Available DC PV power
