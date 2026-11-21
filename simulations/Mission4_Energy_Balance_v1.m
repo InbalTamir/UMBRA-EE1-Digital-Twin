@@ -15,6 +15,28 @@ fprintf('Loaded scenario: %s (version %s)\n', ...
 
 
 addpath(fullfile(project_root, 'models', 'pv'));
+
+%% Load EE-2 and EE-4 Mock Interfaces
+
+interface_path = fullfile(project_root, ...
+    'docs', 'interfaces', 'EE1_Mock_Interfaces.m');
+
+run(interface_path);
+
+% Check consistency with SCN-01
+assert(EE2.battery_energy_Wh == scenario.battery.nominal_energy_Wh, ...
+    'EE-2 battery energy does not match SCN-01');
+
+assert(abs(EE2.initial_SOC * 100 - scenario.battery.initial_soc_pct) < 1e-9, ...
+    'EE-2 initial SOC does not match SCN-01');
+
+assert(EE4.avionics_power_W == scenario.loads.avionics_W, ...
+    'EE-4 avionics power does not match SCN-01');
+
+assert(EE4.auxiliary_power_W == scenario.loads.auxiliary_W, ...
+    'EE-4 auxiliary power does not match SCN-01');
+
+fprintf('PASS: EE-2 / EE-4 Mock interface consistency check.\n');
 %% 1. Scenario Parameters (SCN-01 Mock)
 
 % Simulation
@@ -28,15 +50,18 @@ A_pv = scenario.pv.area_m2;
 eta_pv = scenario.pv.efficiency;
 eta_mppt = scenario.pv.mppt_efficiency;
 
-% Battery
-E_bat_nom = scenario.battery.nominal_energy_Wh;
-SOC_init = scenario.battery.initial_soc_pct;
+% Battery parameters received from EE-2 Mock interface
+E_bat_nom = EE2.battery_energy_Wh;
+SOC_init = EE2.initial_SOC * 100;
+
+% Mission reserve threshold remains defined by SCN-01
 SOC_reserve = scenario.battery.reserve_soc_pct;
 
 % Electrical loads
 P_prop_cruise = scenario.loads.propulsion_W;
-P_avionics = scenario.loads.avionics_W;
-P_aux = scenario.loads.auxiliary_W;
+% Electrical loads received from EE-4 Mock interface
+P_avionics = EE4.avionics_power_W;
+P_aux = EE4.auxiliary_power_W;
 
 
 %% 2. Solar Irradiance Profile (24-Hour Synthetic Clear-Sky Day)
@@ -136,6 +161,24 @@ else
     fprintf('\nNo energy supply failure detected.\n');
 end
 Energy_Margin_Wh = E_bat_Wh - (E_bat_nom * (SOC_reserve / 100)); % [Wh]
+
+%% Initial SIL Scenario Acceptance Checks
+% SCN-01 is a synthetic 24-hour stress-test scenario.
+% Supply failure is an expected result, not a MATLAB execution failure.
+
+assert(all(isfinite(SOC)), ...
+    'FAIL: SOC contains non-finite values');
+
+assert(all(SOC >= -1e-9 & SOC <= 100 + 1e-9), ...
+    'FAIL: SOC outside physical bounds');
+
+assert(abs(energy_residual) < 0.1, ...
+    'FAIL: Energy conservation residual exceeds tolerance');
+
+assert(any(energy_failure), ...
+    'FAIL: Expected energy shortage was not detected');
+
+fprintf('PASS: SCN-01 initial SIL acceptance checks.\n');
 
 %% 4. Console Summary for Milestone Review
 fprintf('=== EE-1 Mission 4 (24h Baseline Simulation) Summary ===\n');
