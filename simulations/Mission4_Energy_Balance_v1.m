@@ -57,7 +57,12 @@ G_irradiance(day_idx) = peak_G * ...
     (sunset_h - sunrise_h));
 
 %% 3. Power Balance & State Integration
-P_PV = pv_power_model(G_irradiance, A_pv, eta_pv, eta_mppt);
+
+T_cell_C = scenario.pv.cell_temperature_C;
+gamma_p = scenario.pv.temperature_coefficient_per_C;
+
+P_PV = pv_power_model(G_irradiance, A_pv, eta_pv, eta_mppt, T_cell_C, gamma_p);
+
 P_load = (P_prop_cruise + P_avionics + P_aux) * ones(1, N); % [W] Total load
 P_net = P_PV - P_load;                            % [W] Net power balance
 

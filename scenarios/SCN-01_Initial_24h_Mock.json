@@ -7,11 +7,17 @@
     "duration_s": 86400,
     "dt_s": 0.1
   },
-  "pv": {
+  
+
+"pv": {
     "area_m2": 0.6,
     "efficiency": 0.25,
-    "mppt_efficiency": 0.95
-  },
+    "mppt_efficiency": 0.95,
+    "cell_temperature_C": 25,
+    "temperature_coefficient_per_C": -0.004
+},
+
+
   "battery": {
     "nominal_energy_Wh": 400,
     "initial_soc_pct": 100,
