@@ -14,7 +14,7 @@ fprintf('Loaded scenario: %s (version %s)\n', ...
     scenario.id, scenario.version);
 
 
-
+addpath(fullfile(project_root, 'models', 'pv'));
 %% 1. Scenario Parameters (SCN-01 Mock)
 
 % Simulation
@@ -57,7 +57,7 @@ G_irradiance(day_idx) = peak_G * ...
     (sunset_h - sunrise_h));
 
 %% 3. Power Balance & State Integration
-P_PV = G_irradiance * A_pv * eta_pv * eta_mppt;   % [W] Available DC PV power
+P_PV = pv_power_model(G_irradiance, A_pv, eta_pv, eta_mppt);
 P_load = (P_prop_cruise + P_avionics + P_aux) * ones(1, N); % [W] Total load
 P_net = P_PV - P_load;                            % [W] Net power balance
 
