@@ -6,8 +6,8 @@ clear; clc;
 
 % --- 1. User Configuration ---
 apiKey = 'YOUR_API_KEY_HERE'; % Tomorrow.io API key
-lat = 33.0085;                                % Latitude (Default: Nahariyya)
-lon = 35.0981;                                % Longitude
+lat = 32.1133;                                % Latitude (Tel Aviv University)
+lon = 34.8044;                                % Longitude                                % Longitude
 scenarioName = 'weather_nominal_24h.csv';     % Output CSV filename
 
 % --- 2. Fetch Data from Tomorrow.io API ---
